@@ -1,0 +1,1453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Class Scores & Ranking</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1E3A5F">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Class Scores">
+<style>
+  :root{
+    --ink:#182B4A;
+    --navy:#1E3A5F;
+    --navy-deep:#122238;
+    --cream:#F7F4EC;
+    --paper:#FFFFFF;
+    --line:#E4DFD2;
+    --gold:#D4A017;
+    --gold-soft:#FCEFC7;
+    --muted:#6B7280;
+    --danger:#B3401F;
+    --green:#2F8F5B;   --green-soft:#DCF3E5;
+    --blue:#2C6FBB;    --blue-soft:#DCE9FA;
+    --pink:#C1447E;    --pink-soft:#F8DCEA;
+    --orange:#C9711A;  --orange-soft:#FBE6D0;
+    --gold-badge-soft:#FCEFC7;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--cream);
+    color:var(--ink);
+    min-height:100vh;
+    padding-bottom:40px;
+  }
+  h1,h2,h3{font-family:Georgia,"Times New Roman",serif; margin:0;}
+  .app-header{
+    background:linear-gradient(160deg,var(--navy),var(--navy-deep));
+    color:#fff;
+    padding:22px 18px 26px;
+    border-radius:0 0 22px 22px;
+    box-shadow:0 6px 18px rgba(18,34,56,0.25);
+    position:relative;
+  }
+  .app-header .eyebrow{
+    text-transform:uppercase;
+    letter-spacing:.14em;
+    font-size:11px;
+    color:var(--gold);
+    font-weight:600;
+    margin-bottom:6px;
+  }
+  .app-header h1{font-size:22px; line-height:1.25; font-weight:700;}
+  .app-header .sub{font-size:13px; color:#C9D6E8; margin-top:4px;}
+  .nav-row{
+    display:flex; align-items:center; justify-content:space-between;
+    min-height:38px; margin-bottom:14px;
+  }
+  .nav-slot{ display:flex; align-items:center; }
+  .icon-btn{
+    background:rgba(255,255,255,0.12);
+    border:1px solid rgba(255,255,255,0.25);
+    color:#fff; width:38px; height:38px; border-radius:10px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:17px; cursor:pointer;
+  }
+  .back-btn{
+    background:rgba(255,255,255,0.12);
+    border:1px solid rgba(255,255,255,0.25);
+    color:#fff; height:38px; padding:0 14px; border-radius:10px;
+    display:flex; align-items:center; gap:6px;
+    font-size:14px; cursor:pointer;
+  }
+  .brand-row{ display:flex; align-items:center; gap:12px; }
+  .brand-text{ min-width:0; }
+  .header-logo{
+    width:44px; height:44px; border-radius:10px; object-fit:cover;
+    background:#fff; border:1px solid rgba(255,255,255,0.3); flex-shrink:0;
+  }
+  .content{ padding:16px; max-width:640px; margin:0 auto; }
+
+  /* Home grid */
+  .section-label{
+    font-size:12px; text-transform:uppercase; letter-spacing:.1em;
+    color:var(--muted); font-weight:700; margin:18px 4px 10px;
+  }
+  .subject-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .tile{
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:16px 14px;
+    text-align:left;
+    cursor:pointer;
+    box-shadow:0 2px 6px rgba(24,43,74,0.05);
+    display:flex; flex-direction:column; gap:8px;
+    min-height:92px;
+  }
+  .tile:active{ transform:scale(0.98); }
+  .tile .emoji{ font-size:22px; }
+  .tile .name{ font-size:14.5px; font-weight:700; line-height:1.25; }
+  .tile .meta{ font-size:11.5px; color:var(--muted); }
+  .tile-overall{
+    background:linear-gradient(135deg,var(--navy),var(--navy-deep));
+    color:#fff; grid-column:1 / -1;
+    flex-direction:row; align-items:center; justify-content:space-between;
+  }
+  .tile-overall .name{ font-size:17px; }
+  .tile-overall .meta{ color:#C9D6E8; }
+  .tile-overall .arrow{ font-size:22px; color:var(--gold); }
+  .tile-manage{ border-style:dashed; }
+
+  /* Buttons */
+  .btn{
+    border:none; border-radius:12px; padding:13px 16px;
+    font-size:15px; font-weight:700; cursor:pointer;
+  }
+  .btn-primary{ background:var(--navy); color:#fff; }
+  .btn-primary:active{ background:var(--navy-deep); }
+  .btn-gold{ background:var(--gold); color:#2A2005; }
+  .btn-outline{ background:transparent; border:1.5px solid var(--line); color:var(--ink); }
+  .btn-danger{ background:var(--danger); color:#fff; }
+  .btn-block{ width:100%; }
+  .btn-sm{ padding:9px 12px; font-size:13px; border-radius:9px; }
+
+  /* Rows / cards */
+  .card{
+    background:var(--paper); border:1px solid var(--line);
+    border-radius:var(--radius); padding:14px; margin-bottom:10px;
+  }
+  .row{ display:flex; align-items:center; gap:12px; }
+  .row + .row{ margin-top:10px; }
+  .student-row .name-block{ flex:1; min-width:0; }
+  .student-row .sname{ font-weight:700; font-size:15px; }
+  .student-row .srank{ font-size:12px; color:var(--muted); margin-top:2px; }
+  .score-input{
+    width:88px; text-align:center; font-size:18px; font-weight:700;
+    padding:10px 4px; border-radius:10px; border:1.5px solid var(--line);
+    background:var(--cream); color:var(--ink);
+  }
+  .score-input:focus{ outline:2px solid var(--navy); background:#fff; }
+  .badge{
+    display:inline-flex; align-items:center; justify-content:center;
+    min-width:34px; height:26px; padding:0 8px; border-radius:20px;
+    font-size:12.5px; font-weight:800;
+  }
+  .badge-1{ background:var(--gold-soft); color:#8A6400; }
+  .badge-2{ background:var(--green-soft); color:var(--green); }
+  .badge-3{ background:var(--blue-soft); color:var(--blue); }
+  .badge-4{ background:var(--pink-soft); color:var(--pink); }
+  .badge-5{ background:var(--orange-soft); color:var(--orange); }
+  .badge-n{ background:#EEEBE1; color:var(--muted); }
+
+  /* Overall table */
+  .table-wrap{ overflow-x:auto; border-radius:var(--radius); border:1px solid var(--line); background:var(--paper); }
+  table{ border-collapse:collapse; width:100%; min-width:480px; font-size:13.5px; }
+  th,td{ padding:10px 10px; text-align:left; white-space:nowrap; }
+  thead th{
+    background:var(--navy); color:#fff; font-weight:700; font-size:11.5px;
+    text-transform:uppercase; letter-spacing:.05em; position:sticky; top:0;
+  }
+  tbody tr:nth-child(even){ background:#FAF8F2; }
+  tbody tr.rank-1{ background:var(--gold-soft); }
+  tbody tr.rank-2{ background:var(--green-soft); }
+  tbody tr.rank-3{ background:var(--blue-soft); }
+  tbody tr.rank-4{ background:var(--pink-soft); }
+  tbody tr.rank-5{ background:var(--orange-soft); }
+  td.total{ font-weight:800; }
+
+  .stat-grid{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-top:12px; }
+  .stat{ background:var(--paper); border:1px solid var(--line); border-radius:12px; padding:12px 8px; text-align:center; }
+  .stat .v{ font-size:18px; font-weight:800; color:var(--navy); }
+  .stat .l{ font-size:10.5px; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; margin-top:2px; }
+
+  .legend{ display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; }
+  .legend span{ font-size:11px; padding:4px 9px; border-radius:20px; font-weight:700; }
+
+  input[type=text]{
+    width:100%; padding:12px; border-radius:10px; border:1.5px solid var(--line);
+    font-size:15px; background:var(--cream); color:var(--ink);
+  }
+  .field{ margin-bottom:14px; }
+  .field label{ display:block; font-size:12px; font-weight:700; color:var(--muted); margin-bottom:6px; text-transform:uppercase; letter-spacing:.05em; }
+  .empty{ text-align:center; color:var(--muted); padding:30px 10px; font-size:14px; }
+  .fab-add{ display:flex; gap:8px; margin-bottom:14px; }
+  .fab-add input{ flex:1; }
+  .subject-list-row{ display:flex; align-items:center; gap:10px; }
+  .subject-list-row input{ flex:1; }
+  .hidden{ display:none !important; }
+  .toast{
+    position:fixed; bottom:18px; left:50%; transform:translateX(-50%);
+    background:var(--ink); color:#fff; padding:10px 18px; border-radius:30px;
+    font-size:13px; opacity:0; pointer-events:none; transition:opacity .25s ease;
+    z-index:50;
+  }
+  .toast.show{ opacity:1; }
+  .link-btn{
+    background:none; border:none; padding:0; margin:0; font:inherit;
+    color:var(--navy); font-weight:700; cursor:pointer; text-decoration:underline;
+    text-underline-offset:2px;
+  }
+  @media print{
+    .no-print{ display:none !important; }
+    body{ background:#fff; padding-bottom:0; }
+    .app-header{ background:#fff !important; color:#000 !important; box-shadow:none; border-radius:0; border-bottom:2px solid #000; }
+    .app-header .eyebrow{ color:#555 !important; }
+    .app-header .sub{ color:#333 !important; }
+    .content{ padding:0 4px; }
+    .card, .table-wrap{ box-shadow:none; }
+  }
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ---------- Data ---------- */
+const STORAGE_KEY = "classScoresApp_v1";
+const DEFAULT_SUBJECTS = ["English Language","Mathematics","Computing","Science","Creative Arts","History","Ghanaian Language","Religious & Moral Education"];
+const DEFAULT_STUDENTS = ["Ada Obi","John Smith","Grace Lee","Emeka Nwosu","Fatima Bello"];
+const SUBJECT_EMOJI = ["📖","➗","💻","🔬","🎨","🏺","🗣️","🙏","📚","🌍","⚽","🎵","🧪","✍️"];
+
+function defaultGradeScale(){
+  return [
+    {id:"g1", label:"A", point:1, min:80, max:100, remark:"Excellent"},
+    {id:"g2", label:"B", point:2, min:70, max:79.99, remark:"Very Good"},
+    {id:"g3", label:"C", point:3, min:60, max:69.99, remark:"Good"},
+    {id:"g4", label:"D", point:4, min:50, max:59.99, remark:"Credit"},
+    {id:"g5", label:"E", point:5, min:40, max:49.99, remark:"Weak Pass"},
+    {id:"g6", label:"F", point:6, min:0, max:39.99, remark:"Fail"}
+  ];
+}
+function normalizeGradeScale(scale){
+  // backward-compat: assign a point value (matching band order) to any band missing one
+  return (Array.isArray(scale) ? scale : []).map((b,idx)=>({
+    id: b.id || ("g"+(idx+1)),
+    label: b.label || "",
+    point: (b.point===undefined || b.point===null || isNaN(parseFloat(b.point))) ? idx+1 : parseFloat(b.point),
+    min: typeof b.min==="number" ? b.min : parseFloat(b.min)||0,
+    max: typeof b.max==="number" ? b.max : parseFloat(b.max)||0,
+    remark: b.remark || ""
+  }));
+}
+const BUILT_IN_DATA = {
+  "schoolName": "ANGLICAN BASIC",
+  "className": "BASIC 6",
+  "teacherName": "MAD. STEPHANIE DZRAMADO & MAD. MAVIS ATALI",
+  "subjects": [
+    "English Language",
+    "Mathematics",
+    "Computing",
+    "Science",
+    "Creative Arts",
+    "History",
+    "Ghanaian Language",
+    "Religious & Moral Education"
+  ],
+  "students": [
+    {
+      "id": "s0",
+      "name": "ACQUAH DESMOND",
+      "scores": {
+        "English Language": 62
+      }
+    },
+    {
+      "id": "s1",
+      "name": "ADJEI ELISHA",
+      "scores": {
+        "English Language": 56
+      }
+    },
+    {
+      "id": "s3",
+      "name": "ASANTE NICHOLAS",
+      "scores": {
+        "English Language": 55
+      }
+    },
+    {
+      "id": "s4",
+      "name": "ASARE ANTWI EMMANUEL",
+      "scores": {
+        "English Language": 50
+      }
+    },
+    {
+      "id": "idg0z7ly3",
+      "name": "ASENYO NELSON",
+      "scores": {
+        "English Language": 53
+      }
+    },
+    {
+      "id": "id941dkkj",
+      "name": "ASIEDU GODFRED",
+      "scores": {
+        "English Language": 38
+      }
+    },
+    {
+      "id": "idoevfjig",
+      "name": "ATIEMO MICHAEL",
+      "scores": {
+        "English Language": 69
+      }
+    },
+    {
+      "id": "idpdp8cjy",
+      "name": "OSEI QUARME NELSON",
+      "scores": {
+        "English Language": 66
+      }
+    },
+    {
+      "id": "id8sksonm",
+      "name": "AYISI NATHNIEL",
+      "scores": {
+        "English Language": 54
+      }
+    },
+    {
+      "id": "id77fb9xw",
+      "name": "BAIDOO PRINCE",
+      "scores": {
+        "English Language": 64
+      }
+    },
+    {
+      "id": "idmm7i3mr",
+      "name": "BOATENG FREDRICK",
+      "scores": {
+        "English Language": 45
+      }
+    },
+    {
+      "id": "idu8ia8ni",
+      "name": "BOATENG PHILIP",
+      "scores": {
+        "English Language": 35
+      }
+    },
+    {
+      "id": "idgqjugtx",
+      "name": "BOTWEY HUMPHERY",
+      "scores": {
+        "English Language": 41
+      }
+    },
+    {
+      "id": "idt9dcdlr",
+      "name": "CUDJOE NATHANIEL",
+      "scores": {
+        "English Language": 54
+      }
+    },
+    {
+      "id": "idysc2lpb",
+      "name": "DADZIE GABRIEL ARTHUR",
+      "scores": {
+        "English Language": 78
+      }
+    },
+    {
+      "id": "iduo5yv2a",
+      "name": "ESHUN HERBERT",
+      "scores": {
+        "English Language": 46
+      }
+    },
+    {
+      "id": "idt7id26o",
+      "name": "HADZOR EMMANUEL",
+      "scores": {
+        "English Language": 47
+      }
+    },
+    {
+      "id": "id46yu406",
+      "name": "MORKLI PRINCE",
+      "scores": {
+        "English Language": 47
+      }
+    },
+    {
+      "id": "idm2sns0s",
+      "name": "NHYIRA JASPER",
+      "scores": {
+        "English Language": 78
+      }
+    },
+    {
+      "id": "idt4qpbv0",
+      "name": "OSEI MICHAEL",
+      "scores": {
+        "English Language": 47
+      }
+    },
+    {
+      "id": "id6cfaugo",
+      "name": "QUANSAH JEPHTAH",
+      "scores": {
+        "English Language": 43
+      }
+    },
+    {
+      "id": "idp64epj5",
+      "name": "QUANSAH JERRY",
+      "scores": {
+        "English Language": 37
+      }
+    },
+    {
+      "id": "idsspep0k",
+      "name": "SARPONG BRIGHT",
+      "scores": {
+        "English Language": 77
+      }
+    },
+    {
+      "id": "id77g66zz",
+      "name": "SIAME KELVIN",
+      "scores": {
+        "English Language": 91
+      }
+    },
+    {
+      "id": "idyn4av7d",
+      "name": "FORDJOUR OWUSU WILLIAMS",
+      "scores": {
+        "English Language": 47
+      }
+    },
+    {
+      "id": "id0gpemex",
+      "name": "NYALEVA CHERUBIN",
+      "scores": {
+        "English Language": 57
+      }
+    },
+    {
+      "id": "idhxjk52e",
+      "name": "BOTWEY CHRISTOPHER",
+      "scores": {
+        "English Language": 53
+      }
+    },
+    {
+      "id": "idow8x9uk",
+      "name": "ATTITOGBE AUGUSTINE",
+      "scores": {
+        "English Language": 56
+      }
+    },
+    {
+      "id": "ider24a6p",
+      "name": "ADJEI DEBORAH",
+      "scores": {
+        "English Language": 68
+      }
+    },
+    {
+      "id": "idpqnhzm0",
+      "name": "ADOM BRIDGET",
+      "scores": {
+        "English Language": 53
+      }
+    },
+    {
+      "id": "idektcsk4",
+      "name": "AGBO DORCAS",
+      "scores": {
+        "English Language": 57
+      }
+    },
+    {
+      "id": "idk96dk1p",
+      "name": "AGYEMANG BETTY",
+      "scores": {
+        "English Language": 27
+      }
+    },
+    {
+      "id": "idr8defmo",
+      "name": "AKORLI ETORNAM ISSABELLA",
+      "scores": {
+        "English Language": 63
+      }
+    },
+    {
+      "id": "idow6ithc",
+      "name": "AKYEA PHILIPA ACHEABEA",
+      "scores": {
+        "English Language": 58
+      }
+    },
+    {
+      "id": "id2j7ivn7",
+      "name": "AMEMASOR NANCY",
+      "scores": {
+        "English Language": 28
+      }
+    },
+    {
+      "id": "idz8ynhrp",
+      "name": "AMPOFOH VERONICA",
+      "scores": {
+        "English Language": 55
+      }
+    },
+    {
+      "id": "id4kuu8e6",
+      "name": "YIRENKYIWAA EMMANUELLA",
+      "scores": {
+        "English Language": 56
+      }
+    },
+    {
+      "id": "idbe03s5u",
+      "name": "ANIM CONSTANCE",
+      "scores": {
+        "English Language": 69
+      }
+    },
+    {
+      "id": "ida8nksby",
+      "name": "APENU MERCY",
+      "scores": {
+        "English Language": 65
+      }
+    },
+    {
+      "id": "id26je401",
+      "name": "ARHIN SARAH",
+      "scores": {
+        "English Language": 30
+      }
+    },
+    {
+      "id": "idc1idxn1",
+      "name": "ARTHUR GRACE",
+      "scores": {
+        "English Language": 36
+      }
+    },
+    {
+      "id": "idt3i48xn",
+      "name": "ASARE ANNA",
+      "scores": {
+        "English Language": 76
+      }
+    },
+    {
+      "id": "idodmcbb9",
+      "name": "ASARE ANNABEL",
+      "scores": {
+        "English Language": 70
+      }
+    },
+    {
+      "id": "id7ymrj8p",
+      "name": "BOTCHWEY JOYCELYN",
+      "scores": {
+        "English Language": 74
+      }
+    },
+    {
+      "id": "id903l2ud",
+      "name": "BOTWEY MARY",
+      "scores": {
+        "English Language": 52
+      }
+    },
+    {
+      "id": "idqzmr86c",
+      "name": "BOYE SANDRA",
+      "scores": {
+        "English Language": 60
+      }
+    },
+    {
+      "id": "idtz7s8ti",
+      "name": "BUKAI HABIBA",
+      "scores": {
+        "English Language": 39
+      }
+    },
+    {
+      "id": "idgwxvgjr",
+      "name": "DADZIE NAOMI",
+      "scores": {
+        "English Language": 30
+      }
+    },
+    {
+      "id": "id0n0e0ih",
+      "name": "GANYO PEACE",
+      "scores": {
+        "English Language": 41
+      }
+    },
+    {
+      "id": "idu7wmpx9",
+      "name": "GBLEWUSI CELESTINA",
+      "scores": {
+        "English Language": 52
+      }
+    },
+    {
+      "id": "idyteglw6",
+      "name": "HERBIGE EMMY",
+      "scores": {
+        "English Language": 54
+      }
+    },
+    {
+      "id": "idl3tofnx",
+      "name": "KAMASAH ANASTASIA",
+      "scores": {
+        "English Language": 54
+      }
+    },
+    {
+      "id": "id8p6iuwz",
+      "name": "KOJODAH JESSICA",
+      "scores": {
+        "English Language": 67
+      }
+    },
+    {
+      "id": "idrh782wx",
+      "name": "LARBI MILLICENT",
+      "scores": {
+        "English Language": 60
+      }
+    },
+    {
+      "id": "idmm8nfpt",
+      "name": "MARCEL YOURINA",
+      "scores": {
+        "English Language": 50
+      }
+    },
+    {
+      "id": "idez3hf4b",
+      "name": "MENSAH PRISCILLA",
+      "scores": {
+        "English Language": 58
+      }
+    },
+    {
+      "id": "idqi7y53c",
+      "name": "MLORFE CHRISTABEL",
+      "scores": {
+        "English Language": 45
+      }
+    },
+    {
+      "id": "idaf7t3ss",
+      "name": "MUNKO VANESSA",
+      "scores": {
+        "English Language": 57
+      }
+    },
+    {
+      "id": "idgazrawk",
+      "name": "NTIM BUODUWA  A. EDNA",
+      "scores": {
+        "English Language": 57
+      }
+    },
+    {
+      "id": "idayexard",
+      "name": "NARH FLORENCE",
+      "scores": {
+        "English Language": 54
+      }
+    },
+    {
+      "id": "idglire30",
+      "name": "OFORI MARGARET",
+      "scores": {
+        "English Language": 39
+      }
+    },
+    {
+      "id": "idapq2ho6",
+      "name": "TILLAH LETICIA",
+      "scores": {
+        "English Language": 40
+      }
+    },
+    {
+      "id": "idp5v4ko2",
+      "name": "MANTEBEA RACHAEL",
+      "scores": {
+        "English Language": 37
+      }
+    },
+    {
+      "id": "idzcwams5",
+      "name": "DZORKAH GRACE",
+      "scores": {
+        "English Language": 34
+      }
+    },
+    {
+      "id": "id1zwe2t9",
+      "name": "OKYERE KATE",
+      "scores": {
+        "English Language": 0
+      }
+    },
+    {
+      "id": "id5tp2va2",
+      "name": "OSEI ARHINKRA JOSEPHINE",
+      "scores": {
+        "English Language": 30
+      }
+    },
+    {
+      "id": "id0c6djmc",
+      "name": "ADDO JANET",
+      "scores": {
+        "English Language": 34
+      }
+    }
+  ]
+};
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      const parsed = JSON.parse(raw);
+      if(parsed.logoUrl===undefined) parsed.logoUrl = null;
+      parsed.gradeScale = parsed.gradeScale===undefined ? defaultGradeScale() : normalizeGradeScale(parsed.gradeScale);
+      return parsed;
+    }
+  }catch(e){}
+  // No saved data yet on this device/browser -> start from the built-in class data
+  return {
+    schoolName: BUILT_IN_DATA.schoolName || "My School",
+    className: BUILT_IN_DATA.className || "",
+    teacherName: BUILT_IN_DATA.teacherName || "",
+    logoUrl: BUILT_IN_DATA.logoUrl || null,
+    gradeScale: defaultGradeScale(),
+    subjects: BUILT_IN_DATA.subjects.slice(),
+    students: JSON.parse(JSON.stringify(BUILT_IN_DATA.students))
+  };
+}
+let state = loadState();
+function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+function uid(){ return "id"+Math.random().toString(36).slice(2,9); }
+
+/* ---------- View / router ---------- */
+let view = { screen:"home", subject:null };
+let editingStudentId = null;
+
+function go(screen, extra){ view = Object.assign({screen}, extra); render(); }
+
+/* ---------- Ranking helpers ---------- */
+function ordinal(n){
+  if(n==null) return "-";
+  const s=["th","st","nd","rd"], v=n%100;
+  return n + (s[(v-20)%10] || s[v] || s[0]);
+}
+function rankColorClass(n){
+  return n>=1 && n<=5 ? "badge-"+n : "badge-n";
+}
+function rowRankClass(n){
+  return n>=1 && n<=5 ? "rank-"+n : "";
+}
+// returns array parallel to students: {id, value, rank} with standard competition ranking (ties share rank)
+function rankBy(students, valueFn){
+  const withVal = students.map(st=>({id:st.id, value:valueFn(st)}));
+  const sorted = withVal.slice().sort((a,b)=> b.value - a.value);
+  const rankMap = {};
+  let lastVal = null, lastRank = 0, seen=0;
+  sorted.forEach(item=>{
+    seen++;
+    if(item.value !== lastVal){ lastRank = seen; lastVal = item.value; }
+    rankMap[item.id] = (item.value>0 || sorted.some(x=>x.value>0)) ? lastRank : null;
+  });
+  // if everyone is 0/empty, ranks are meaningless -> null
+  const anyScore = withVal.some(x=>x.value>0);
+  if(!anyScore) Object.keys(rankMap).forEach(k=>rankMap[k]=null);
+  return rankMap;
+}
+function subjectScore(student, subject){
+  const v = student.scores[subject];
+  if(v===undefined || v===null || v==="") return 0;
+  const n = typeof v === "number" ? v : parseFloat(v);
+  return isNaN(n) ? 0 : n;
+}
+function studentHasAnyScore(student, subject){
+  const v = student.scores[subject];
+  if(v===undefined || v===null || v==="") return false;
+  const n = typeof v === "number" ? v : parseFloat(v);
+  return !isNaN(n);
+}
+function total(student){
+  return state.subjects.reduce((sum,su)=> sum + subjectScore(student,su), 0);
+}
+function formatNum(n){
+  if(n===null || n===undefined || isNaN(n)) return "";
+  let s = (Math.round(n*100)/100).toFixed(2);
+  s = s.replace(/0+$/,"").replace(/\.$/,"");
+  return s;
+}
+function average(student){
+  return state.subjects.length ? total(student)/state.subjects.length : 0;
+}
+function gradeBandForScore(score){
+  if(!state.gradeScale.length) return null;
+  const bands = state.gradeScale.slice().sort((a,b)=> b.min - a.min);
+  return bands.find(b=> score >= b.min && score <= b.max) || null;
+}
+function subjectGradeBand(student, subject){
+  if(!studentHasAnyScore(student, subject)) return null;
+  return gradeBandForScore(subjectScore(student, subject));
+}
+function aggregate(student){
+  // Sums each scored subject's grade point (lower total = better, like BECE aggregate)
+  let sum = 0, count = 0, allGraded = true;
+  state.subjects.forEach(su=>{
+    if(!studentHasAnyScore(student, su)) return;
+    const band = gradeBandForScore(subjectScore(student, su));
+    if(band){ sum += band.point; count++; }
+    else allGraded = false;
+  });
+  if(state.subjects.length && count < state.subjects.length) allGraded = false;
+  return { sum, count, complete: allGraded && count>0 };
+}
+function gradeBadgeClass(band){
+  const idx = state.gradeScale.findIndex(b=>b.id===band.id);
+  const n = ((idx>=0?idx:0) % 5) + 1;
+  return "badge-"+n;
+}
+
+/* ---------- Toast ---------- */
+let toastTimer;
+function toast(msg){
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=> el.classList.remove("show"), 1400);
+}
+
+/* ---------- Render ---------- */
+function render(){
+  const app = document.getElementById("app");
+
+  // Capture focus + scroll state so re-rendering doesn't yank the page around
+  const active = document.activeElement;
+  let restoreFocus = null;
+  if(active && active.dataset && active.dataset.action==="score-input"){
+    restoreFocus = {
+      student: active.dataset.student,
+      subject: active.dataset.subject,
+      selStart: active.selectionStart,
+      selEnd: active.selectionEnd
+    };
+  }
+  const scrollY = window.scrollY;
+
+  if(view.screen==="home") app.innerHTML = renderHome();
+  else if(view.screen==="subject") app.innerHTML = renderSubject(view.subject);
+  else if(view.screen==="overall") app.innerHTML = renderOverall();
+  else if(view.screen==="students") app.innerHTML = renderStudents();
+  else if(view.screen==="settings") app.innerHTML = renderSettings();
+  else if(view.screen==="report") app.innerHTML = renderReport(view.student);
+  attachHandlers();
+
+  if(restoreFocus){
+    const el = Array.from(document.querySelectorAll('[data-action="score-input"]'))
+      .find(e=> e.dataset.student===restoreFocus.student && e.dataset.subject===restoreFocus.subject);
+    if(el){
+      el.focus();
+      try{ el.setSelectionRange(restoreFocus.selStart, restoreFocus.selEnd); }catch(e){}
+    }
+  }
+  window.scrollTo(0, scrollY);
+  requestAnimationFrame(()=> window.scrollTo(0, scrollY));
+}
+
+function headerBase({title, sub, back, gear}){
+  const logo = state.logoUrl ? `<img src="${state.logoUrl}" alt="School logo" class="header-logo">` : "";
+  return `
+  <div class="app-header">
+    <div class="nav-row no-print">
+      <div class="nav-slot">${back?`<button class="back-btn" data-action="go-home">‹ Back</button>`:""}</div>
+      <div class="nav-slot">${gear?`<button class="icon-btn" data-action="go-settings">⚙️</button>`:""}</div>
+    </div>
+    <div class="brand-row">
+      ${logo}
+      <div class="brand-text">
+        <div class="eyebrow">${escapeHtml(state.schoolName || "My School")}</div>
+        <h1>${title}</h1>
+        ${sub? `<div class="sub">${sub}</div>`:""}
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderHome(){
+  const subjectsHtml = state.subjects.map((su,i)=>{
+    const filled = state.students.filter(st=>studentHasAnyScore(st,su)).length;
+    return `
+    <button class="tile" data-action="open-subject" data-subject="${escapeAttr(su)}">
+      <div class="emoji">${SUBJECT_EMOJI[i % SUBJECT_EMOJI.length]}</div>
+      <div class="name">${escapeHtml(su)}</div>
+      <div class="meta">${filled}/${state.students.length} scored</div>
+    </button>`;
+  }).join("");
+
+  return `
+    ${headerBase({title:"Class Ranking", sub:(state.className||"Tap a subject to enter scores")+ (state.teacherName? " · "+state.teacherName : ""), gear:true})}
+    <div class="content">
+      <button class="tile tile-overall" data-action="go-overall">
+        <div>
+          <div class="name">🏆 Overall Results</div>
+          <div class="meta">Totals & class ranking</div>
+        </div>
+        <div class="arrow">›</div>
+      </button>
+
+      <div class="section-label">Subjects</div>
+      <div class="subject-grid">${subjectsHtml}</div>
+
+      <button class="tile tile-manage btn-block" style="margin-top:14px;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:8px;" data-action="go-students">
+        <span>👥</span><span class="name">Manage Students</span>
+      </button>
+    </div>
+  `;
+}
+
+function renderSubject(subject){
+  const rankMap = rankBy(state.students, st=>subjectScore(st,subject));
+  const rows = state.students.map(st=>{
+    const val = st.scores[subject];
+    const shown = (val===undefined || val===null) ? "" : String(val);
+    const r = rankMap[st.id];
+    return `
+    <div class="card student-row">
+      <div class="row" style="margin-bottom:10px;">
+        <span class="badge ${r ? rankColorClass(r) : "badge-n"}" style="flex-shrink:0;">${r ? ordinal(r) : "–"}</span>
+        <div class="name-block">
+          <div class="sname">${escapeHtml(st.name)}</div>
+        </div>
+      </div>
+      <div style="display:flex; justify-content:flex-end;">
+        <input class="score-input" type="text" inputmode="decimal" autocomplete="off" placeholder="—"
+          value="${escapeAttr(shown)}" data-action="score-input" data-student="${st.id}" data-subject="${escapeAttr(subject)}">
+      </div>
+    </div>`;
+  }).join("");
+
+  return `
+    ${headerBase({title:subject, sub:"Enter each student's score (0–100, decimals ok)", back:true})}
+    <div class="content">
+      ${state.students.length? rows : `<div class="empty">No students yet. Add students first from Manage Students.</div>`}
+    </div>
+  `;
+}
+
+function renderOverall(){
+  const rankMap = rankBy(state.students, st=>total(st));
+  const sorted = state.students.slice().sort((a,b)=> total(b)-total(a));
+  const totals = state.students.map(total);
+  const anyScore = totals.some(t=>t>0);
+  const avg = anyScore ? (totals.reduce((a,b)=>a+b,0)/state.students.length) : 0;
+  const highest = anyScore ? Math.max(...totals) : 0;
+  const lowest = anyScore ? Math.min(...totals) : 0;
+  const showGrades = state.gradeScale.length > 0;
+
+  const bodyRows = sorted.map(st=>{
+    const r = rankMap[st.id];
+    const agg = aggregate(st);
+    return `
+    <tr class="${rowRankClass(r)}">
+      <td>${r? ordinal(r): "-"}</td>
+      <td><button class="link-btn" data-action="view-report" data-student="${st.id}">${escapeHtml(st.name)}</button></td>
+      ${state.subjects.map(su=>`<td>${studentHasAnyScore(st,su)? formatNum(subjectScore(st,su)) : "—"}</td>`).join("")}
+      <td class="total">${formatNum(total(st))}</td>
+      ${showGrades ? `<td class="total">${agg.count>0 ? agg.sum + (agg.complete? "" : "*") : "—"}</td>` : ""}
+    </tr>`;
+  }).join("");
+
+  const legendItems = [
+    ["Gold · 1st","badge-1"], ["Green · 2nd","badge-2"], ["Blue · 3rd","badge-3"],
+    ["Pink · 4th","badge-4"], ["Orange · 5th","badge-5"]
+  ].map(([label,cls])=>`<span class="badge ${cls}">${label}</span>`).join("");
+
+  return `
+    ${headerBase({title:"Overall Results", sub:"Ranked by total score, highest first", back:true})}
+    <div class="content">
+      <button class="btn btn-outline btn-sm no-print" data-action="print-page" style="margin-bottom:12px;">🖨️ Print Results</button>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>Pos</th><th>Student</th>
+            ${state.subjects.map(su=>`<th>${escapeHtml(su)}</th>`).join("")}
+            <th>Total</th>
+            ${showGrades ? `<th>Total Grade</th>` : ""}
+          </tr></thead>
+          <tbody>${bodyRows || `<tr><td colspan="99" style="padding:20px;text-align:center;color:var(--muted);">No students yet</td></tr>`}</tbody>
+        </table>
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat"><div class="v">${avg.toFixed(1)}</div><div class="l">Class Average</div></div>
+        <div class="stat"><div class="v">${formatNum(highest)}</div><div class="l">Highest Total</div></div>
+        <div class="stat"><div class="v">${formatNum(lowest)}</div><div class="l">Lowest Total</div></div>
+      </div>
+
+      <div class="legend">${legendItems}</div>
+      ${showGrades ? `<div style="font-size:11.5px;color:var(--muted);margin-top:10px;">Total Grade = sum of each subject's grade point (lower is better). * = not all subjects scored yet.</div>` : ""}
+    </div>
+  `;
+}
+
+function renderReport(studentId){
+  const st = state.students.find(s=>s.id===studentId);
+  if(!st){
+    return `${headerBase({title:"Report Card", back:true})}<div class="content"><div class="empty">Student not found.</div></div>`;
+  }
+  const rankMap = rankBy(state.students, s=>total(s));
+  const overallRank = rankMap[st.id];
+  const agg = aggregate(st);
+  const showGrades = state.gradeScale.length > 0;
+
+  const subjectRows = state.subjects.map(su=>{
+    const subRankMap = rankBy(state.students, s=>subjectScore(s,su));
+    const r = subRankMap[st.id];
+    const has = studentHasAnyScore(st,su);
+    const band = has ? gradeBandForScore(subjectScore(st,su)) : null;
+    return `
+    <tr>
+      <td>${escapeHtml(su)}</td>
+      <td>${has? formatNum(subjectScore(st,su)) : "—"}</td>
+      <td>${r? ordinal(r) : "-"}</td>
+      ${showGrades ? `<td>${band? `<span class="badge ${gradeBadgeClass(band)}">${escapeHtml(band.label)} (${band.point})</span>` : "—"}</td>` : ""}
+    </tr>`;
+  }).join("");
+
+  return `
+    ${headerBase({title:st.name, sub:(state.className? state.className+" · ":"")+"Report Card", back:true})}
+    <div class="content">
+      <button class="btn btn-outline btn-sm no-print" data-action="print-page" style="margin-bottom:14px;">🖨️ Print Report</button>
+
+      <div class="table-wrap" style="margin-bottom:14px;">
+        <table>
+          <thead><tr><th>Subject</th><th>Score</th><th>Position</th>${showGrades?`<th>Grade</th>`:""}</tr></thead>
+          <tbody>${subjectRows || `<tr><td colspan="4" style="padding:20px;text-align:center;color:var(--muted);">No subjects yet</td></tr>`}</tbody>
+        </table>
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat"><div class="v">${formatNum(total(st))}</div><div class="l">Total</div></div>
+        <div class="stat"><div class="v">${average(st).toFixed(1)}</div><div class="l">Average</div></div>
+        <div class="stat"><div class="v">${overallRank? ordinal(overallRank) : "-"}</div><div class="l">Overall Position</div></div>
+      </div>
+
+      ${showGrades && agg.count>0 ? `
+      <div class="card" style="margin-top:14px; text-align:center;">
+        <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:700;margin-bottom:6px;">Total Grade (Aggregate)</div>
+        <span style="font-size:26px;font-weight:800;color:var(--navy);">${agg.sum}</span>
+        <div style="margin-top:6px;font-size:12px;color:var(--muted);">
+          Sum of grade points across ${agg.count} subject(s)${agg.complete? "" : " — some subjects not yet scored"}
+        </div>
+      </div>` : ""}
+
+      ${state.teacherName ? `<div style="margin-top:20px; font-size:12px; color:var(--muted); text-align:center;">Class Teacher: ${escapeHtml(state.teacherName)}</div>` : ""}
+    </div>
+  `;
+}
+
+function renderStudents(){
+  const rows = state.students.map(st=>{
+    const isEditing = editingStudentId === st.id;
+    return `
+    <div class="card row" style="flex-wrap:wrap;">
+      <div class="name-block">
+        ${isEditing
+          ? `<input type="text" value="${escapeAttr(st.name)}" data-action="edit-student-input" data-student="${st.id}">`
+          : `<div class="sname">${escapeHtml(st.name)}</div>`
+        }
+      </div>
+      ${isEditing
+        ? `<button class="btn btn-primary btn-sm" data-action="save-student" data-student="${st.id}">Save</button>
+           <button class="btn btn-outline btn-sm" data-action="cancel-edit-student" data-student="${st.id}">Cancel</button>`
+        : `<button class="btn btn-outline btn-sm" data-action="view-report" data-student="${st.id}">Report</button>
+           <button class="btn btn-outline btn-sm" data-action="edit-student" data-student="${st.id}">Edit</button>
+           <button class="btn btn-danger btn-sm" data-action="delete-student" data-student="${st.id}">Remove</button>`
+      }
+    </div>
+  `;}).join("");
+
+  return `
+    ${headerBase({title:"Manage Students", sub:state.students.length+" student(s)", back:true})}
+    <div class="content">
+      <div class="fab-add">
+        <input type="text" id="new-student-name" placeholder="New student name">
+        <button class="btn btn-primary" data-action="add-student">Add</button>
+      </div>
+      ${rows || `<div class="empty">No students yet — add your first one above.</div>`}
+    </div>
+  `;
+}
+
+function renderSettings(){
+  const subjectRows = state.subjects.map((su,idx)=>`
+    <div class="subject-list-row card row">
+      <input type="text" value="${escapeAttr(su)}" data-action="rename-subject" data-index="${idx}">
+      <button class="btn btn-danger btn-sm" data-action="delete-subject" data-index="${idx}">Remove</button>
+    </div>
+  `).join("");
+
+  const gradeRows = state.gradeScale.map((g,idx)=>`
+    <div class="card" style="padding:12px;">
+      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:8px;">
+        <div>
+          <label style="display:block;font-size:10px;color:var(--muted);text-transform:uppercase;font-weight:700;margin-bottom:4px;">Label</label>
+          <input type="text" value="${escapeAttr(g.label)}" data-action="grade-field" data-index="${idx}" data-field="label"
+            style="width:100%;padding:8px;border-radius:8px;border:1.5px solid var(--line);background:var(--cream);font-size:14px;">
+        </div>
+        <div>
+          <label style="display:block;font-size:10px;color:var(--muted);text-transform:uppercase;font-weight:700;margin-bottom:4px;">Point</label>
+          <input type="text" inputmode="decimal" value="${escapeAttr(g.point)}" data-action="grade-field" data-index="${idx}" data-field="point"
+            style="width:100%;padding:8px;border-radius:8px;border:1.5px solid var(--line);background:var(--cream);font-size:14px;">
+        </div>
+        <div>
+          <label style="display:block;font-size:10px;color:var(--muted);text-transform:uppercase;font-weight:700;margin-bottom:4px;">Remark</label>
+          <input type="text" value="${escapeAttr(g.remark)}" data-action="grade-field" data-index="${idx}" data-field="remark"
+            style="width:100%;padding:8px;border-radius:8px;border:1.5px solid var(--line);background:var(--cream);font-size:14px;">
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr auto; gap:8px; align-items:end;">
+        <div>
+          <label style="display:block;font-size:10px;color:var(--muted);text-transform:uppercase;font-weight:700;margin-bottom:4px;">Min %</label>
+          <input type="text" inputmode="decimal" value="${escapeAttr(g.min)}" data-action="grade-field" data-index="${idx}" data-field="min"
+            style="width:100%;padding:8px;border-radius:8px;border:1.5px solid var(--line);background:var(--cream);font-size:14px;">
+        </div>
+        <div>
+          <label style="display:block;font-size:10px;color:var(--muted);text-transform:uppercase;font-weight:700;margin-bottom:4px;">Max %</label>
+          <input type="text" inputmode="decimal" value="${escapeAttr(g.max)}" data-action="grade-field" data-index="${idx}" data-field="max"
+            style="width:100%;padding:8px;border-radius:8px;border:1.5px solid var(--line);background:var(--cream);font-size:14px;">
+        </div>
+        <button class="btn btn-danger btn-sm" data-action="delete-grade" data-index="${idx}">✕</button>
+      </div>
+    </div>
+  `).join("");
+
+  return `
+    ${headerBase({title:"Settings", sub:"School details & subjects", back:true})}
+    <div class="content">
+      <div class="field">
+        <label>School Logo</label>
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
+          ${state.logoUrl
+            ? `<img src="${state.logoUrl}" alt="School logo" style="width:56px;height:56px;border-radius:10px;object-fit:cover;border:1px solid var(--line);">`
+            : `<div style="width:56px;height:56px;border-radius:10px;background:var(--cream);border:1.5px dashed var(--line);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:10px;text-align:center;padding:2px;">No logo</div>`
+          }
+          <input type="file" accept="image/*" data-action="upload-logo" style="flex:1;font-size:13px;">
+        </div>
+        ${state.logoUrl ? `<button class="btn btn-outline btn-sm" data-action="remove-logo">Remove Logo</button>` : ""}
+      </div>
+      <div class="field">
+        <label>School Name</label>
+        <input type="text" id="set-school" value="${escapeAttr(state.schoolName)}">
+      </div>
+      <div class="field">
+        <label>Class Name</label>
+        <input type="text" id="set-class" value="${escapeAttr(state.className)}" placeholder="e.g. JHS 2A">
+      </div>
+      <div class="field">
+        <label>Class Teacher</label>
+        <input type="text" id="set-teacher" value="${escapeAttr(state.teacherName)}" placeholder="e.g. Madam Stephanie Dzramado">
+      </div>
+      <button class="btn btn-primary btn-block" data-action="save-settings" style="margin-bottom:20px;">Save Details</button>
+
+      <div class="section-label">Subjects</div>
+      ${subjectRows}
+      <div class="fab-add">
+        <input type="text" id="new-subject-name" placeholder="New subject name">
+        <button class="btn btn-primary" data-action="add-subject">Add</button>
+      </div>
+
+      <div class="section-label">Grading Scale</div>
+      <div style="font-size:12px;color:var(--muted);margin:-4px 4px 10px;">Each subject score gets graded into a band, and its Point value. A student's <b>Total Grade</b> is the sum of their grade points across all subjects (lower total = better, like a BECE aggregate).</div>
+      ${gradeRows}
+      <button class="btn btn-outline btn-block" data-action="add-grade" style="margin-bottom:20px;">+ Add Grade Band</button>
+
+      <div class="section-label">Data</div>
+      <button class="btn btn-outline btn-block" data-action="export-data" style="margin-bottom:10px;">Export backup (.json)</button>
+      <label class="btn btn-outline btn-block" style="display:block; text-align:center; margin-bottom:10px; cursor:pointer;">
+        Import backup (.json)
+        <input type="file" accept="application/json,.json" data-action="import-data" style="display:none;">
+      </label>
+      <button class="btn btn-danger btn-block" data-action="reset-data">Erase all data</button>
+    </div>
+  `;
+}
+
+/* ---------- Handlers ---------- */
+function attachHandlers(){
+  document.querySelectorAll("[data-action]").forEach(el=>{
+    const action = el.dataset.action;
+
+    if(action==="go-home") el.onclick = ()=> go("home");
+    if(action==="go-overall") el.onclick = ()=> go("overall");
+    if(action==="go-students") el.onclick = ()=> go("students");
+    if(action==="go-settings") el.onclick = ()=> go("settings");
+    if(action==="open-subject") el.onclick = ()=> go("subject", {subject: el.dataset.subject});
+    if(action==="view-report") el.onclick = ()=> go("report", {student: el.dataset.student});
+    if(action==="print-page") el.onclick = ()=> window.print();
+
+    if(action==="score-input"){
+      el.oninput = ()=>{
+        const st = state.students.find(s=>s.id===el.dataset.student);
+        // sanitize: digits and a single decimal point only
+        let raw = el.value.replace(/[^0-9.]/g,"");
+        const parts = raw.split(".");
+        if(parts.length>2) raw = parts[0] + "." + parts.slice(1).join("");
+        if(raw !== el.value) el.value = raw;
+
+        if(raw==="") delete st.scores[el.dataset.subject];
+        else st.scores[el.dataset.subject] = raw; // keep as typed (e.g. "78." mid-entry) until blur
+        save();
+        render();
+      };
+      el.onblur = ()=>{
+        const st = state.students.find(s=>s.id===el.dataset.student);
+        const raw = st.scores[el.dataset.subject];
+        if(raw===undefined || raw===null) return;
+        let v = parseFloat(raw);
+        if(isNaN(v)){ delete st.scores[el.dataset.subject]; }
+        else{
+          v = Math.max(0, Math.min(100, Math.round(v*100)/100));
+          st.scores[el.dataset.subject] = v;
+        }
+        save();
+        render();
+      };
+    }
+
+    if(action==="add-student"){
+      el.onclick = ()=>{
+        const input = document.getElementById("new-student-name");
+        const name = input.value.trim();
+        if(!name){ toast("Enter a student name"); return; }
+        state.students.push({id:uid(), name, scores:{}});
+        save(); toast("Student added"); render();
+      };
+    }
+    if(action==="edit-student"){
+      el.onclick = ()=>{ editingStudentId = el.dataset.student; render(); };
+    }
+    if(action==="cancel-edit-student"){
+      el.onclick = ()=>{ editingStudentId = null; render(); };
+    }
+    if(action==="save-student"){
+      el.onclick = ()=>{
+        const input = Array.from(document.querySelectorAll('[data-action="edit-student-input"]'))
+          .find(e=> e.dataset.student===el.dataset.student);
+        const st = state.students.find(s=>s.id===el.dataset.student);
+        const name = input ? input.value.trim() : "";
+        if(name) st.name = name;
+        editingStudentId = null;
+        save(); toast("Saved"); render();
+      };
+    }
+    if(action==="delete-student"){
+      el.onclick = ()=>{
+        if(!confirm("Remove this student and all their scores?")) return;
+        state.students = state.students.filter(s=>s.id!==el.dataset.student);
+        save(); render();
+      };
+    }
+
+    if(action==="add-subject"){
+      el.onclick = ()=>{
+        const input = document.getElementById("new-subject-name");
+        const name = input.value.trim();
+        if(!name){ toast("Enter a subject name"); return; }
+        if(state.subjects.includes(name)){ toast("Subject already exists"); return; }
+        state.subjects.push(name);
+        save(); toast("Subject added"); render();
+      };
+    }
+    if(action==="rename-subject"){
+      el.onchange = ()=>{
+        const idx = parseInt(el.dataset.index,10);
+        const oldName = state.subjects[idx];
+        const newName = el.value.trim() || oldName;
+        state.subjects[idx] = newName;
+        if(newName!==oldName){
+          state.students.forEach(st=>{
+            if(oldName in st.scores){ st.scores[newName]=st.scores[oldName]; delete st.scores[oldName]; }
+          });
+        }
+        save(); toast("Saved");
+      };
+    }
+    if(action==="delete-subject"){
+      el.onclick = ()=>{
+        if(!confirm("Remove this subject and its scores?")) return;
+        const idx = parseInt(el.dataset.index,10);
+        const name = state.subjects[idx];
+        state.subjects.splice(idx,1);
+        state.students.forEach(st=> delete st.scores[name]);
+        save(); render();
+      };
+    }
+
+    if(action==="grade-field"){
+      el.onchange = ()=>{
+        const idx = parseInt(el.dataset.index,10);
+        const field = el.dataset.field;
+        const band = state.gradeScale[idx];
+        if(!band) return;
+        if(field==="label" || field==="remark") band[field] = el.value.trim();
+        else{
+          const v = parseFloat(el.value);
+          band[field] = isNaN(v) ? 0 : v;
+        }
+        save(); toast("Saved");
+      };
+    }
+    if(action==="delete-grade"){
+      el.onclick = ()=>{
+        const idx = parseInt(el.dataset.index,10);
+        state.gradeScale.splice(idx,1);
+        save(); render();
+      };
+    }
+    if(action==="add-grade"){
+      el.onclick = ()=>{
+        state.gradeScale.push({id:uid(), label:"", point: state.gradeScale.length+1, min:0, max:0, remark:""});
+        save(); render();
+      };
+    }
+
+    if(action==="upload-logo"){
+      el.onchange = ()=>{
+        const file = el.files && el.files[0];
+        if(!file) return;
+        if(!file.type.startsWith("image/")){ toast("Please choose an image file"); return; }
+        if(file.size > 2*1024*1024){ toast("Image too large — please use one under 2MB"); return; }
+        const reader = new FileReader();
+        reader.onload = ()=>{
+          state.logoUrl = reader.result;
+          save(); toast("Logo updated"); render();
+        };
+        reader.onerror = ()=> toast("Couldn't read that image");
+        reader.readAsDataURL(file);
+      };
+    }
+    if(action==="remove-logo"){
+      el.onclick = ()=>{
+        state.logoUrl = null;
+        save(); toast("Logo removed"); render();
+      };
+    }
+    if(action==="save-settings"){
+      el.onclick = ()=>{
+        state.schoolName = document.getElementById("set-school").value.trim();
+        state.className = document.getElementById("set-class").value.trim();
+        state.teacherName = document.getElementById("set-teacher").value.trim();
+        save(); toast("Details saved"); render();
+      };
+    }
+    if(action==="export-data"){
+      el.onclick = ()=>{
+        const blob = new Blob([JSON.stringify(state,null,2)], {type:"application/json"});
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = (state.schoolName||"class")+"-scores-backup.json";
+        a.click();
+      };
+    }
+    if(action==="import-data"){
+      el.onchange = ()=>{
+        const file = el.files && el.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = ()=>{
+          let parsed;
+          try{ parsed = JSON.parse(reader.result); }
+          catch(e){ toast("That file isn't a valid backup"); return; }
+
+          if(!parsed || !Array.isArray(parsed.students) || !Array.isArray(parsed.subjects)){
+            toast("That file doesn't look like a Class Scores backup");
+            return;
+          }
+          if(!confirm("Import this backup? It will replace all current students, subjects, and scores on this device.")) return;
+
+          state = {
+            schoolName: parsed.schoolName || "My School",
+            className: parsed.className || "",
+            teacherName: parsed.teacherName || "",
+            logoUrl: parsed.logoUrl !== undefined ? parsed.logoUrl : null,
+            gradeScale: Array.isArray(parsed.gradeScale) ? normalizeGradeScale(parsed.gradeScale) : defaultGradeScale(),
+            subjects: parsed.subjects,
+            students: parsed.students
+          };
+          save();
+          toast("Backup imported");
+          go("home");
+        };
+        reader.onerror = ()=> toast("Couldn't read that file");
+        reader.readAsText(file);
+      };
+    }
+    if(action==="reset-data"){
+      el.onclick = ()=>{
+        if(!confirm("This erases all students, subjects, and scores on this device. Continue?")) return;
+        localStorage.removeItem(STORAGE_KEY);
+        state = loadState();
+        toast("Data erased"); go("home");
+      };
+    }
+  });
+}
+
+/* ---------- Utils ---------- */
+function escapeHtml(str){
+  return String(str==null?"":str).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+function escapeAttr(str){ return escapeHtml(str); }
+
+render();
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js").catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
